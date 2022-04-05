@@ -30,7 +30,7 @@ private:
 	// synchronization
 	std::mutex queue_mutex;
 	std::condition_variable condition;
-	bool stop;
+	std::atomic<bool> stop;
 };
 
 // the constructor just launches some amount of workers
@@ -66,15 +66,15 @@ template<class F, class... Args>
 auto ThreadPool::enqueue(F&& f, Args&&... args) 
 	-> std::future<typename std::result_of<F(Args...)>::type>
 {
+	tasks_total++;
 	using return_type = typename std::result_of<F(Args...)>::type;
 
 	auto task = std::make_shared<std::packaged_task<return_type()>>(
 			std::bind(std::forward<F>(f), std::forward<Args>(args)...)
 		);
-		
+
 	std::future<return_type> res = task->get_future();
 	{
-		tasks_total++;
 		std::unique_lock<std::mutex> lock(queue_mutex);
 
 		// don't allow enqueueing after stopping the pool
@@ -101,6 +101,7 @@ void ThreadPool::wait_for_tasks()
 inline ThreadPool::~ThreadPool()
 {
 	wait_for_tasks();
+
 	{
 		std::unique_lock<std::mutex> lock(queue_mutex);
 		stop = true;
