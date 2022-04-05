@@ -17,7 +17,7 @@ public:
 	template<class F, class... Args>
 	auto enqueue(F&& f, Args&&... args)
 		-> std::future<typename std::result_of<F(Args...)>::type>;
-	void wait_for_tasks();
+	void wait();
 	~ThreadPool();
 private:
 	// need to keep track of threads so we can join them
@@ -88,7 +88,7 @@ auto ThreadPool::enqueue(F&& f, Args&&... args)
 }
 
 // wait until all tasks are complete
-void ThreadPool::wait_for_tasks()
+void ThreadPool::wait()
 {
 	while (tasks_total > 0)
 	{
@@ -100,7 +100,7 @@ void ThreadPool::wait_for_tasks()
 // the destructor joins all threads
 inline ThreadPool::~ThreadPool()
 {
-	wait_for_tasks();
+	wait();
 
 	{
 		std::unique_lock<std::mutex> lock(queue_mutex);
