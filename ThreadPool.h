@@ -26,7 +26,7 @@ private:
 	// the task queue
 	std::queue<std::function<void()>> tasks;
 	// number of unfinished tasks
-	std::atomic<size_t> tasks_total = 0;
+	std::atomic<size_t> tasks_total;
 
 	// synchronization
 	std::mutex queue_mutex;
@@ -36,7 +36,8 @@ private:
 
 // the constructor just launches some amount of workers
 inline ThreadPool::ThreadPool(size_t threads)
-	: stop(false)
+	: tasks_total(0)
+	, stop(false)
 {
 	for (size_t i = 0; i <threads; ++i)
 		workers.emplace_back(
