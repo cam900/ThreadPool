@@ -1,6 +1,8 @@
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
 
+#pragma once
+
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -18,7 +20,7 @@ public:
 	template<class F, class... Args>
 	auto enqueue(F&& f, Args&&... args)
 		-> std::future<typename std::result_of<F(Args...)>::type>;
-	void wait();
+	void wait_for_tasks();
 	~ThreadPool();
 private:
 	// need to keep track of threads so we can join them
@@ -90,7 +92,7 @@ auto ThreadPool::enqueue(F&& f, Args&&... args)
 }
 
 // wait until all tasks are complete
-void ThreadPool::wait()
+void ThreadPool::wait_for_tasks()
 {
 	while (tasks_total > 0)
 	{
@@ -102,7 +104,7 @@ void ThreadPool::wait()
 // the destructor joins all threads
 inline ThreadPool::~ThreadPool()
 {
-	wait();
+	wait_for_tasks();
 
 	{
 		std::unique_lock<std::mutex> lock(queue_mutex);
