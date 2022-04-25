@@ -2,6 +2,7 @@ ThreadPool
 ==========
 
 A simple C++11 Thread Pool implementation.
+
 Thread Pool wait function added by cam900
 
 Basic usage:
