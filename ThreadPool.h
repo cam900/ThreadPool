@@ -20,7 +20,15 @@ public:
 	template<class F, class... Args>
 	auto enqueue(F&& f, Args&&... args)
 		-> std::future<typename std::result_of<F(Args...)>::type>;
-	void wait_for_tasks();
+	void wait_for_tasks()
+	{
+		// wait until all tasks are complete
+		while (tasks_total > 0)
+		{
+			if (tasks_total == 0)
+				break;
+		}
+	}
 	~ThreadPool();
 private:
 	// need to keep track of threads so we can join them
@@ -89,16 +97,6 @@ auto ThreadPool::enqueue(F&& f, Args&&... args)
 	}
 	condition.notify_one();
 	return res;
-}
-
-// wait until all tasks are complete
-void ThreadPool::wait_for_tasks()
-{
-	while (tasks_total > 0)
-	{
-		if (tasks_total == 0)
-			break;
-	}
 }
 
 // the destructor joins all threads
