@@ -104,15 +104,21 @@ void ThreadPool::wait_for_tasks()
 // the destructor joins all threads
 inline ThreadPool::~ThreadPool()
 {
-	wait_for_tasks();
-
+	while (true)
 	{
-		std::unique_lock<std::mutex> lock(queue_mutex);
-		stop = true;
+		if (tasks_total == 0)
+		{
+			{
+				std::unique_lock<std::mutex> lock(queue_mutex);
+				stop = true;
+			}
+			condition.notify_all();
+			for (std::thread &worker: workers)
+				worker.join();
+
+			return;
+		}
 	}
-	condition.notify_all();
-	for (std::thread &worker: workers)
-		worker.join();
 }
 
 #endif
